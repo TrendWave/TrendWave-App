@@ -2,10 +2,13 @@ package post.presentation
 
 import account.AppUser
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -38,6 +41,9 @@ import post.Post
  * Display lingle posts
  *
  * @param modifier -> Modifications that will be available
+ * @param backgroundcolor -> Backgroundcolor
+ * @param textcolor -> Color of text
+ * @param iconbackgroundcolor -> Color if no pricture is there
  * @param posttext -> content of post
  * @param postuser -> Username of creator
  * @param postdate -> Date of creation
@@ -50,20 +56,25 @@ import post.Post
 @Composable
 fun PostDisplay(
     modifier: Modifier,
+    backgroundcolor: Color,
+    textcolor: Color,
+    iconbackgroundcolor: Color,
     posttext: String,
     postuser: String,
     postdate: String,
     postuuid: String,
+    posttheme: String,
     postid: String,
     localDataStorageManager: DataStorageManager,
     onEvent: (TrendWaveEvent) -> Unit,
-    state: TrendWaveState
+    state: TrendWaveState,
+    notclickable: Boolean,
 ) {
     Column(
         modifier = modifier
+            .padding(start = 10.dp, end = 10.dp)
             .fillMaxWidth()
-            .padding(start = 20.dp, end = 20.dp)
-            .background(Color(242, 242, 242), RoundedCornerShape(
+            .background(backgroundcolor, RoundedCornerShape(
                 topStart = 10.dp,
                 topEnd = 10.dp,
                 bottomStart = 10.dp,
@@ -71,74 +82,105 @@ fun PostDisplay(
             ))
     ) {
         Row(
-            modifier = Modifier.offset(x = 8.dp, y = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
+            //Icon / Profile img
             Box(
-                modifier = Modifier
-                    .background(Color(255, 204, 204), RoundedCornerShape(30.dp))
+                modifier = Modifier.padding(start = 10.dp, top = 10.dp, bottom = 10.dp, end = 5.dp)
+                    .background(iconbackgroundcolor, RoundedCornerShape(30.dp))
                     .padding(8.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     imageVector = Icons.Rounded.Person,
                     contentDescription = "",
+                    tint = textcolor,
                     modifier = Modifier.scale(1.3f),
                 )
             }
-            TextButton(
-                onClick = {
-                    GlobalScope.launch {
-                        val user = AppUser(state)
-                        onEvent(
-                            TrendWaveEvent.ClickUserProfileViewButton(
-                                user.getUserByUsername(
-                                    postuser
+
+            //Text
+            Box(
+                modifier = Modifier.fillMaxHeight().offset(y = -(5).dp).clickable {
+                    if(!notclickable) {
+                        GlobalScope.launch {
+                            onEvent(
+                                TrendWaveEvent.ClickUserProfileViewButton(
+                                    AppUser().getUserByUsername(
+                                        postuser
+                                    )
                                 )
                             )
-                        )
+                        }
                     }
-                }
+                },
             ) {
                 Text(
                     text = "@$postuser",
-                    modifier = Modifier.offset(y = -(8).dp, x = -(4).dp),
-                    color = Color.DarkGray,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 12.sp
+                    color = textcolor,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.sp,
+                    modifier = Modifier
+                )
+                Text(
+                    text = "Posted: $postdate",
+                    color = textcolor,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 8.sp,
+                    modifier = Modifier.padding(top = 15.dp)
                 )
             }
-            if(localDataStorageManager.readString("username") == postuser ||
-                localDataStorageManager.readString("role") == "Admin"){
+
+            //Trashcan
+            Box(
+                modifier = Modifier.fillMaxWidth().offset(y = -(5).dp).padding(end = 10.dp),
+                contentAlignment = Alignment.TopEnd
+            ) {
                 IconButton(
                     onClick = {
-                        GlobalScope.launch {
-                            val restAPI = RESTfulPostManager(state)
-                            restAPI.deletePost(postid)
-
-                            onEvent(TrendWaveEvent.PostDeletionButton(Post(postid, postuuid, postuser, postdate, posttext), state.posts))
+                        if (localDataStorageManager.readString("username") == postuser ||
+                            localDataStorageManager.readString("role") == "Admin"
+                        ) {
+                            if(!notclickable) {
+                                GlobalScope.launch {
+                                    RESTfulPostManager().deletePost(postid)
+                                    onEvent(
+                                        TrendWaveEvent.PostDeletionButton(
+                                            Post(postid, postuuid, postuser, postdate, posttext, posttheme),
+                                            state.posts
+                                        )
+                                    )
+                                }
+                            }
                         }
                     },
-                    modifier = Modifier.offset(y = -(3).dp, x = 190.dp)
-                ){
-                    Icon(
-                        imageVector = TablerIcons.Trash,
-                        contentDescription = "",
-                    )
+                ) {
+                    if (localDataStorageManager.readString("username") == postuser ||
+                        localDataStorageManager.readString("role") == "Admin"
+                    ) {
+                        Icon(
+                            imageVector = TablerIcons.Trash,
+                            contentDescription = "",
+                            tint = textcolor
+                        )
+                    } else {
+                        Icon(
+                            imageVector = TablerIcons.Trash,
+                            contentDescription = "",
+                            tint = backgroundcolor
+                        )
+                    }
                 }
             }
         }
         Text(
-            text = "Posted: $postdate",
-            modifier = Modifier.offset(y = -(15).dp, x = 55.dp),
-            color = Color.DarkGray,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 8.sp
-        )
-        Text(
             text = posttext,
-            modifier = Modifier.padding(start = 50.dp, end = 10.dp, bottom = 20.dp)
+            modifier = Modifier.padding(start = 30.dp, end = 30.dp, top = 10.dp, bottom = 10.dp).clickable {
+                onEvent(TrendWaveEvent.ClickPostMessageDisplay(postuser, posttext, postdate, postid))
+            },
+            color = textcolor,
         )
+
     }
 }

@@ -1,6 +1,6 @@
 package views.sheet
 
-import account.image.ImageDataSource
+import account.manager.LogoutManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -8,28 +8,21 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
-import androidx.compose.material.Slider
-import androidx.compose.material.Switch
-import androidx.compose.material.SwitchColors
-import androidx.compose.material.SwitchDefaults
 import androidx.compose.material.Text
-import androidx.compose.material.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.ExitToApp
-import androidx.compose.material.icons.rounded.Face
-import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -39,253 +32,259 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import event.TrendWaveEvent
+import event.TrendWaveState
 import managers.DataStorageManager
+import utilities.color.Colors
+import utilities.color.fromEnum
 import utilities.presentation.SideSheet
 
 /**
  * Settings UI Screen
  *
  * @param isOpen -> Is Settings Shown
- * @param imageDataSource -> Datasource to display images
+ * @param state -> Statemanager
  * @param localDataSource -> Datasource to display data
  * @param onEvent -> EventHandeling
+ * @param onLogout -> Navigate to login screen on logout
  */
 @Composable
 fun SettingsSheet(
     isOpen: Boolean,
-    imageDataSource: ImageDataSource,
+    state: TrendWaveState,
     localDataSource: DataStorageManager,
-    onEvent: (TrendWaveEvent) -> Unit
+    onEvent: (TrendWaveEvent) -> Unit,
+    onLogout: () -> Unit,
+    corner: RoundedCornerShape
 ) {
-
-    // var darkMode by mutableStateOf(true)
-
+    //Sidesheet is the sliding animation
     SideSheet(
         visible = isOpen,
         modifier = Modifier.fillMaxSize(),
-        backgroundcolor = Color.White
+        backgroundcolor = Color.fromEnum(Colors.PRIMARY)
     ) {
+        //Bottom Bar
         Box(
-            Modifier.offset(x = (-10).dp, y = 10.dp).fillMaxSize(),
-            contentAlignment = Alignment.TopStart
+            modifier = Modifier.padding(start = 10.dp, end = 10.dp, top = 20.dp).height(80.dp)
+                .fillMaxWidth().background(
+                    color = Color.fromEnum(Colors.QUATERNARY),
+                    shape = corner
+                ),
+            contentAlignment = Alignment.CenterStart
         ) {
-            IconButton(
-                onClick = { onEvent(TrendWaveEvent.ClickCloseSettingsScreen) },
-                Modifier.offset(x = 0.dp, y = 0.dp)
+            //Create new post box
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Icon(
                     imageVector = Icons.Rounded.ArrowBack,
                     contentDescription = "",
-                    Modifier.padding(top = 20.dp)
+                    modifier = Modifier.padding(10.dp).clickable {
+                        onEvent(TrendWaveEvent.ClickCloseSettingsScreen)
+                    },
+                    tint = Color.fromEnum(Colors.SENARY)
                 )
-
+                Text(
+                    text = "Settings",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.fromEnum(Colors.SENARY),
+                    modifier = Modifier.offset(y = 7.dp).padding(start = 15.dp)
+                )
             }
-            /*Row(Modifier.offset(x = 300.dp, y = 10.dp)) {
-                Switch(
-                    checked = darkMode,
-                    onCheckedChange = { darkMode = !darkMode },
-                    colors = SwitchDefaults.colors(Color.Black)
-                )
-            }*/
+        }
 
 
-            Text(
-                "Settings",
-                style = TextStyle(
-                    Color.Black,
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 35.sp
-                ), modifier = Modifier.offset(x = 15.dp, y = 55.dp).padding(top = 20.dp)
-            )
+        Box(
+            modifier = Modifier.padding(10.dp).offset(x = (-10).dp, y = 10.dp).fillMaxSize(),
+            contentAlignment = Alignment.TopStart
+        ) {
 
-            Box(Modifier.offset(x = 20.dp, y = 130.dp)) {
+
+            /**
+             * Account section
+             */
+
+            Box(Modifier.offset(x = 20.dp)) {
+                //Account Icon
                 Icon(
                     imageVector = Icons.Rounded.AccountCircle,
                     contentDescription = "",
-                    Modifier.scale(1.3f).padding(top = 20.dp)
+                    modifier = Modifier.scale(1.3f).padding(top = 20.dp),
+                    tint = Color.fromEnum(Colors.SENARY)
                 )
+
+                //Account Text
                 Text(
-                    "Account",
-                    Modifier.offset(x = 40.dp, y = (-3).dp).padding(top = 20.dp),
+                    text = "Account",
+                    modifier = Modifier.offset(x = 40.dp, y = (-3).dp).padding(top = 20.dp),
                     style = TextStyle(
-                        Color.Black,
                         fontWeight = FontWeight.Bold,
                         fontSize = 22.sp
-                    )
+                    ),
+                    color = Color.fromEnum(Colors.SENARY)
                 )
 
-
-
-
+                //Dividing Line
                 Divider(
-                    color = Color.Gray,
+                    color = Color.fromEnum(Colors.SENARY),
                     thickness = 1.dp,
                     modifier = Modifier.fillMaxWidth().padding(top = 70.dp, end = 20.dp)
                 )
 
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    TextButton(onClick = { }, modifier = Modifier.padding(top = 70.dp)) {
-                        Text("Edit Account", color = Color.Gray, fontSize = 15.sp)
-                    }
-                    IconButton(
-                        onClick = { },
-                        Modifier.offset(x = 310.dp, y = 0.dp).padding(top = 61.dp)
+                //All settings in Account
+                Box(
+                    modifier = Modifier.offset(y = 80.dp)
+                ) {
+                    //Change Username
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(10.dp).clickable { },
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Icon(
-                            imageVector = Icons.Rounded.ArrowForward,
-                            contentDescription = "",
-                            Modifier.padding(top = 20.dp)
-                        )
-                    }
-                }
-
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    TextButton(onClick = { }, modifier = Modifier.padding(top = 110.dp)) {
-                        Text("Change Password", color = Color.Gray, fontSize = 15.sp)
-                    }
-                    IconButton(
-                        onClick = { },
-                        Modifier.offset(x = 310.dp, y = 0.dp).padding(top = 101.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.ArrowForward,
-                            contentDescription = "",
-                            Modifier.padding(top = 20.dp)
-                        )
-                    }
-                }
-
-
-                /**
-                 * SAMPLE
-                 */
-                Box(modifier = Modifier.fillMaxWidth().clickable {  }) {
-                    Text(
-                        text = "Change Status",
-                        color = Color.Gray,
-                        fontSize = 15.sp,
-                        modifier = Modifier.padding(top = 150.dp)
-                    )
-                    Icon(
-                        imageVector = Icons.Rounded.ArrowForward,
-                        contentDescription = "",
-                        Modifier.offset(x = 310.dp, y = 0.dp).padding(top = 161.dp)
-                    )
-                }
-
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    TextButton(onClick = { }, modifier = Modifier.padding(top = 190.dp)) {
-                        Text("Privacy", color = Color.Gray, fontSize = 15.sp)
-                    }
-                    IconButton(
-                        onClick = { },
-                        Modifier.offset(x = 310.dp, y = 0.dp).padding(top = 181.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.ArrowForward,
-                            contentDescription = "",
-                            Modifier.padding(top = 20.dp)
-                        )
-                    }
-                }
-            }
-
-            Box(Modifier.offset(x = 20.dp, y = 370.dp)) {
-                Icon(
-                    imageVector = Icons.Rounded.Face,
-                    contentDescription = "",
-                    Modifier.scale(1.3f).padding(top = 20.dp)
-                )
-                Text(
-                    "Profile",
-                    Modifier.offset(x = 40.dp, y = (-3).dp).padding(top = 20.dp),
-                    style = TextStyle(
-                        Color.Black,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 22.sp
-                    )
-                )
-
-                Divider(
-                    color = Color.Gray,
-                    thickness = 1.dp,
-                    modifier = Modifier.fillMaxWidth().padding(top = 70.dp, end = 20.dp)
-                )
-
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    TextButton(onClick = { }, modifier = Modifier.padding(top = 70.dp)) {
-                        Text("Your Profile", color = Color.Gray, fontSize = 15.sp)
-                    }
-                    IconButton(
-                        onClick = { },
-                        Modifier.offset(x = 310.dp, y = 0.dp).padding(top = 61.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.ArrowForward,
-                            contentDescription = "",
-                            Modifier.padding(top = 20.dp)
-                        )
-                    }
-                }
-            }
-
-            Box(Modifier.offset(x = 20.dp, y = 480.dp)) {
-                Icon(
-                    imageVector = Icons.Rounded.Star,
-                    contentDescription = "",
-                    Modifier.scale(1.3f).padding(top = 20.dp)
-                )
-                Text(
-                    "FAQ",
-                    Modifier.offset(x = 40.dp, y = (-3).dp).padding(top = 20.dp),
-                    style = TextStyle(
-                        Color.Black,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 22.sp
-                    )
-                )
-
-                Divider(
-                    color = Color.Gray,
-                    thickness = 1.dp,
-                    modifier = Modifier.fillMaxWidth().padding(top = 70.dp, end = 20.dp)
-                )
-
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    TextButton(onClick = { }, modifier = Modifier.padding(top = 70.dp)) {
                         Text(
-                            "Kein Plan was du hier von mir willst",
-                            color = Color.Gray,
-                            fontSize = 15.sp
+                            text = "Change Username",
+                            color = Color.fromEnum(Colors.SENARY),
+                            fontSize = 15.sp,
                         )
-                    }
-                    IconButton(
-                        onClick = { },
-                        Modifier.offset(x = 310.dp, y = 0.dp).padding(top = 61.dp)
-                    ) {
                         Icon(
                             imageVector = Icons.Rounded.ArrowForward,
                             contentDescription = "",
-                            Modifier.padding(top = 20.dp)
+                            modifier = Modifier.padding(end = 40.dp),
+                            tint = Color.fromEnum(Colors.SENARY)
+                        )
+                    }
+
+                    //Change Password
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(10.dp).padding(top = 40.dp)
+                            .clickable { },
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Change Password",
+                            color = Color.fromEnum(Colors.SENARY),
+                            fontSize = 15.sp,
+                        )
+                        Icon(
+                            imageVector = Icons.Rounded.ArrowForward,
+                            contentDescription = "",
+                            modifier = Modifier.padding(end = 40.dp),
+                            tint = Color.fromEnum(Colors.SENARY),
+                        )
+                    }
+
+
+                    //Change Status
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(10.dp).padding(top = 80.dp)
+                            .clickable { },
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Change Status",
+                            color = Color.fromEnum(Colors.SENARY),
+                            fontSize = 15.sp,
+                        )
+                        Icon(
+                            imageVector = Icons.Rounded.ArrowForward,
+                            contentDescription = "",
+                            modifier = Modifier.padding(end = 40.dp),
+                            tint = Color.fromEnum(Colors.SENARY),
+                        )
+                    }
+
+                    //Privacy
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(10.dp).padding(top = 120.dp)
+                            .clickable { },
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Privacy",
+                            color = Color.fromEnum(Colors.SENARY),
+                            fontSize = 15.sp,
+                        )
+                        Icon(
+                            imageVector = Icons.Rounded.ArrowForward,
+                            contentDescription = "",
+                            modifier = Modifier.padding(end = 40.dp),
+                            tint = Color.fromEnum(Colors.SENARY),
                         )
                     }
                 }
-
             }
 
-            Row(Modifier.offset(x = 170.dp, y = 600.dp)) {
-                TextButton(onClick = { }, modifier = Modifier.padding(top = 70.dp)) {
-                    Text("LOGOUT", color = Color.Black, fontSize = 15.sp)
-                }
-                IconButton(onClick = { }, Modifier.offset(x = ((-130).dp), y = 60.dp)) {
+
+            /**
+             * Other app Settings
+             */
+            Box(Modifier.padding(start = 20.dp, top = 260.dp)) {
+                //Settings Icon
+                Icon(
+                    imageVector = Icons.Rounded.Settings,
+                    contentDescription = "",
+                    modifier = Modifier.scale(1.3f).padding(top = 20.dp),
+                    tint = Color.fromEnum(Colors.SENARY),
+                )
+
+                //App Setting Text
+                Text(
+                    text = "You're App",
+                    modifier = Modifier.offset(x = 40.dp, y = (-3).dp).padding(top = 20.dp),
+                    style = TextStyle(
+                        color = Color.fromEnum(Colors.SENARY),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 22.sp
+                    )
+                )
+
+                //Dividing line
+                Divider(
+                    color = Color.fromEnum(Colors.SENARY),
+                    thickness = 1.dp,
+                    modifier = Modifier.fillMaxWidth().padding(top = 70.dp, end = 20.dp)
+                )
+
+                //TODO Add settings
+            }
+
+
+            /**
+             * LOGOUT
+             */
+
+
+            Box(
+                modifier = Modifier.fillMaxWidth().padding(start = 50.dp,top = 500.dp)
+                    .clickable {
+                        //Logout function called
+                        val logoutManager = LogoutManager(
+                            state = state,
+                            localDataManager = localDataSource,
+                            onEvent = onEvent
+                        )
+                        logoutManager.logout()
+                        onLogout()
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Row() {
+                    //Logout Text
+                    Text(
+                        text = "LOGOUT",
+                        color = Color.fromEnum(Colors.SENARY),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                    )
+
+                    //Logout Icon
                     Icon(
                         imageVector = Icons.Rounded.ExitToApp,
                         contentDescription = "",
-                        Modifier.padding(top = 20.dp)
+                        modifier = Modifier.offset(x = (-100).dp),
+                        tint = Color.fromEnum(Colors.SENARY),
                     )
                 }
             }
-
         }
     }
 }

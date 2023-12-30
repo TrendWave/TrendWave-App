@@ -1,16 +1,14 @@
 package account
 
 import account.utilities.RoleType
+import event.State
 import event.TrendWaveState
 import kotlinx.coroutines.flow.StateFlow
 
-class AppUser(
-    private val state: TrendWaveState
-): UserInterface {
+class AppUser: UserInterface {
 
-    private val url: String
-        get() = "https://cross-cultural-auto.000webhostapp.com/php/MySQLBridge/connectGet.php"
     val restApi = RESTfulUserManager()
+    val state = State.getState()
 
     /**
      * get user of database
@@ -19,11 +17,7 @@ class AppUser(
      * @param -> email
      */
     override suspend fun getUser(uuid: String): RESTfulUserManager.User {
-        if(state.user?.uuid != uuid) {
-            return restApi.findUserByUUID(uuid)
-        }else {
-            return state.user!!
-        }
+        return restApi.findUserByUUID(uuid)
     }
 
     /**
@@ -33,11 +27,7 @@ class AppUser(
      * @param -> user
      */
     override suspend fun getUserByUsername(user: String): RESTfulUserManager.User {
-        if(state.user?.username != user) {
-            return restApi.findUserByUsername(user)
-        }else {
-            return state.user!!
-        }
+        return restApi.findUserByUsername(user)
     }
 
     /**
@@ -46,12 +36,8 @@ class AppUser(
      * @return -> email
      */
     override suspend fun getEmail(uuid: String): String {
-        if(state.user?.uuid != uuid) {
-            val user = restApi.findUserByUUID(uuid)
-            return user.email
-        }else {
-            return state.user!!.email
-        }
+        val user = restApi.findUserByUUID(uuid)
+        return user.email
     }
 
     /**
@@ -60,12 +46,8 @@ class AppUser(
      * @return -> password
      */
     override suspend fun getPassword(uuid: String): String {
-        if (state.user?.uuid != uuid) {
-            val user = restApi.findUserByUUID(uuid)
-            return user.password
-        } else {
-            return state.user!!.password
-        }
+        val user = restApi.findUserByUUID(uuid)
+        return user.password
     }
 
     /**
@@ -74,12 +56,8 @@ class AppUser(
      * @return -> username
      */
     override suspend fun getUsername(uuid: String): String {
-        if (state.user?.uuid != uuid) {
-            val user = restApi.findUserByUUID(uuid)
-            return user.username
-        } else {
-            return state.user!!.username
-        }
+        val user = restApi.findUserByUUID(uuid)
+        return user.username
     }
 
     /**
@@ -98,12 +76,8 @@ class AppUser(
      * @return -> role
      */
     override suspend fun getRole(uuid: String): String {
-        if (state.user?.uuid != uuid) {
-            val user = restApi.findUserByUUID(uuid)
-            return user.role
-        } else {
-            return state.user!!.role
-        }
+        val user = restApi.findUserByUUID(uuid)
+        return user.role
     }
 
     /**
@@ -112,12 +86,8 @@ class AppUser(
      * @return -> birthday
      */
     override suspend fun getBirthday(uuid: String): String {
-        if (state.user?.uuid != uuid) {
-            val user = restApi.findUserByUUID(uuid)
-            return user.birthday
-        } else {
-            return state.user!!.birthday
-        }
+        val user = restApi.findUserByUUID(uuid)
+        return user.birthday
     }
 
     /**
@@ -126,12 +96,8 @@ class AppUser(
      * @return -> signup
      */
     override suspend fun getSignupday(uuid: String): String {
-        if (state.user?.uuid != uuid) {
-            val user = restApi.findUserByUUID(uuid)
-            return user.signup
-        } else {
-            return state.user!!.signup
-        }
+        val user = restApi.findUserByUUID(uuid)
+        return user.signup
     }
 
     override fun hasPermissionRole(role: RoleType): Boolean {
@@ -144,12 +110,8 @@ class AppUser(
      * @return -> follower
      */
     override suspend fun getFollower(uuid: String): String {
-        if (state.user?.uuid != uuid) {
-            val user = restApi.findUserByUUID(uuid)
-            return user.follower
-        } else {
-            return state.user!!.follower
-        }
+        val user = restApi.findUserByUUID(uuid)
+        return user.follower
     }
 
     /**
@@ -158,12 +120,8 @@ class AppUser(
      * @return -> following
      */
     override suspend fun getFollowing(uuid: String): String {
-        if (state.user?.uuid != uuid) {
-            val user = restApi.findUserByUUID(uuid)
-            return user.following
-        } else {
-            return state.user!!.following
-        }
+        val user = restApi.findUserByUUID(uuid)
+        return user.following
     }
 
     /**
@@ -171,13 +129,19 @@ class AppUser(
      * @param uuid -> Unique ID
      * @return -> Userlist
      */
-    override suspend fun getFollowed(uuid: String): String{
-        if(state.user?.uuid != uuid){
-            val user = restApi.findUserByUUID(uuid)
-            return user.followed
-        }else {
-            return state.user!!.followed
-        }
+    override suspend fun getFollowed(uuid: String): String {
+        val user = restApi.findUserByUUID(uuid)
+        return user.followed
+    }
+
+    /**
+     * get home buttons string
+     * @param uuid -> Unique ID
+     * @return -> String of buttons Watch postButtonManager
+     */
+    suspend fun getButtons(uuid: String): String{
+        val user = restApi.findUserByUUID(uuid)
+        return user.homebuttons
     }
 
 }

@@ -1,4 +1,3 @@
-import account.AppUser
 import account.manager.LoginManager
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -9,15 +8,16 @@ import dev.icerock.moko.mvvm.compose.viewModelFactory
 import di.AppModule
 import event.TrendWaveEvent
 import event.TrendWaveViewModel
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import post.RESTfulPostManager
-import post.Post
 import views.LoginScreen
 import views.HomeScreen
 import views.LoadingScreen
 import views.RegisterScreen
+import views.presentation.PostButtonManager
 
 
 /**
@@ -26,6 +26,7 @@ import views.RegisterScreen
  *
  * @param appModule -> iOS or Android AppMoudle for ImageDataSources
  */
+@OptIn(DelicateCoroutinesApi::class)
 @Composable
 fun App(
     appModule: AppModule
@@ -33,69 +34,66 @@ fun App(
 
     var currentScreen by remember { mutableStateOf<Screen>(Screen.Loading) }
     var loggedin by remember { mutableStateOf(false) }
-    var firstload by remember { mutableStateOf(false) }
-    var lst by remember { mutableStateOf<List<Post>>(emptyList()) }
-    var lst1 by remember { mutableStateOf<List<Post>>(emptyList()) }
     val loginScreenTT = LoginScreen()
     val loadingScreenTT = LoadingScreen()
     val homeScreenTT = HomeScreen()
     val registerScreenTT = RegisterScreen()
 
-
     val viewModel = getViewModel(
         key = "main-login-screen",
         factory = viewModelFactory {
-            TrendWaveViewModel(appModule.imageDataSource)
+            val restAPI = RESTfulPostManager()
+            TrendWaveViewModel(
+                localDataStorageManager = appModule.localDataSource,
+                restApi = restAPI
+            )
         }
     )
     val state by viewModel.state.collectAsState()
-    val loginManager = LoginManager(state)
+    val loginManager = LoginManager()
 
+    //Application start event
+    viewModel.onEvent(TrendWaveEvent.ApplicationStartEvent)
+
+
+
+    //Is logged in?
     GlobalScope.launch {
         delay(100)
-        if(loginManager.isLoggedIn(appModule.localDataSource)){
-            if(!loggedin) {
-                loggedin = true
-                if (appModule.localDataSource.readString("uuid") != null) {
-                    val uuid = appModule.localDataSource.readString("uuid").toString()
-                    if(state.user == null){
-                        val user = AppUser(state)
-                        viewModel.onEvent(TrendWaveEvent.LoadUserToLocal(user.getUser(uuid)))
-                    }
-                    val restAPI = RESTfulPostManager(state)
+        if(!loggedin) {
+            loggedin = true
+            if (loginManager.isLoggedIn(appModule.localDataSource)) {
+                PostButtonManager().getButtonsDatabase(
+                    appModule.localDataSource.readString("uuid")!!, viewModel::onEvent, false).toMutableList()
+                while(state.posts.isEmpty() || state.user == null || !state.buttonshomescreenloaded){
+                    delay(10)
+                }
 
-                    lst = restAPI.getUserPosts(uuid)
-                    lst1 = restAPI.getRandomPosts()
-
-                    while(lst1.isEmpty() && lst.isEmpty()){
-                        delay(1)
-                    }
-                    state.user?.let { TrendWaveEvent.UserPostLoading(lst1, lst, uuid, it.follower, state.user!!.following) }
-                        ?.let { viewModel.onEvent(it) }
-                    while (state.posts.isEmpty()) {
-                        delay(1)
-                    }
-                    currentScreen = Screen.Home
-                 }
-            }
-        }else {
-            if(!firstload) {
+                //Set screen to home
+                currentScreen = Screen.Home
+            } else {
+                //Set screen to Login
                 currentScreen = Screen.Login
-                firstload = true
             }
         }
     }
 
+
     when (currentScreen) {
+        //Loading Screen Navigation
         is Screen.Loading -> loadingScreenTT.LoadingScreen(
             imageDataSource = appModule.imageDataSource
         )
+
+        //Home Screen Navigation
         is Screen.Home -> homeScreenTT.HomeScreen(
             onEvent = viewModel::onEvent,
             state = state,
             localDataSource = appModule.localDataSource,
-            imageDataSource = appModule.imageDataSource
+            onNavigateLogin = {currentScreen = Screen.Login},
         )
+
+        //Login Screen Navigation
         is Screen.Login -> loginScreenTT.LoginScreen(
             state = state,
             onEvent = viewModel::onEvent,
@@ -104,6 +102,8 @@ fun App(
             imageDataSource = appModule.imageDataSource,
             localDataManager = appModule.localDataSource
         )
+
+        //Register Screen Navigation
         is Screen.Register -> registerScreenTT.RegisterScreen(
             state = state,
             onEvent = viewModel::onEvent,
@@ -119,9 +119,10 @@ fun App(
 /**
  * define both screens as object
  *
- * @Object Home -> Main Screen, gonna be Login
- * @Object Login -> Login Screen
- * @Object Details -> Detail test screen
+ * @Object Loading -> Screen while starting the app
+ * @Object Home -> Screen after login or start the app
+ * @Object Login -> Enter user data to login
+ * @Object Register -> Create an account
  */
 sealed class Screen {
     data object Loading: Screen()
